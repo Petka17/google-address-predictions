@@ -4,13 +4,15 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "start": "parcel index.html"
+    "start": "parcel index.html",
+    "format": "prettier --write ./src/**/*.{ts,tsx,js,jsx,json,yml}"
   },
   "dependencies": {
     "react": "^16.9.0",
     "react-dom": "^16.9.0"
   },
   "devDependencies": {
-    "parcel-bundler": "^1.12.3"
+    "parcel-bundler": "^1.12.3",
+    "prettier": "^1.19.1"
   }
 }
