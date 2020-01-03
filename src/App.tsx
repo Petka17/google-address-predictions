@@ -2,10 +2,20 @@ import React from 'react'
 
 import useGoogleAutocompleteSuggestions from './useGoogleAutocompleteSuggestions'
 
+type Address = {
+  house: string
+  street: string
+  city: string
+  state: string
+  zip: string
+}
+
+type AddressAction = Partial<Address>
+
 //-----
 const App = () => {
   const [{ house, street, city, state, zip }, updateAddress] = React.useReducer(
-    (state, newValues) => ({ ...state, ...newValues }),
+    (state: Address, newValues: AddressAction) => ({ ...state, ...newValues }),
     {
       house: '',
       street: '',
@@ -19,11 +29,11 @@ const App = () => {
     key: process.env.GOOGLE_MAPS_API_KEY,
   })
 
-  const onInput = e => {
+  const onInput = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setInput(e.target.value)
   }
 
-  const handleAddressClick = placeId => () => getPlace(placeId, updateAddress)
+  const handleAddressClick = (placeId: string) => () => getPlace(placeId, updateAddress)
 
   return (
     <React.Fragment>
@@ -46,13 +56,13 @@ const App = () => {
             <td className="slimField">
               <input className="field" value={house} readOnly />
             </td>
-            <td className="wideField" colSpan="2">
+            <td className="wideField" colSpan={2}>
               <input className="field" value={street} readOnly />
             </td>
           </tr>
           <tr>
             <td className="label">City</td>
-            <td className="wideField" colSpan="3">
+            <td className="wideField" colSpan={3}>
               <input className="field" value={city} readOnly />
             </td>
           </tr>

@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es3",
+    "module": "commonjs",
+    "lib": ["dom", "es2017"],
+    "jsx": "react",
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "sourceMap": true,
+    "strict": false,
+    "noImplicitAny": true,
+    "allowUnusedLabels": true
+  }
+}
