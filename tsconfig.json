@@ -2,12 +2,17 @@
   "compilerOptions": {
     "target": "es3",
     "module": "commonjs",
-    "lib": ["dom", "es2017"],
+    "lib": ["dom"],
     "jsx": "react",
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "sourceMap": true,
     "strict": true,
-    "noImplicitAny": true
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "removeComments": true
   }
 }
