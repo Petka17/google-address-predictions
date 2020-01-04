@@ -1,66 +1,56 @@
 import React from 'react'
+import { PlaceDetailsResult, PlaceDetailsResponseStatus, PlaceAutocompleteResult, AddressComponent } from '@google/maps'
+
+import { Address, addressFieldsMapping } from './Address'
+
+declare global {
+  interface Window {
+    google?: any
+  }
+}
+
+type Language = 'en' | 'ru' | 'ua'
+type Country = 'us' | 'ru'
+
+const LANGUAGE: Language = 'en'
+const COUNTRY: Country = 'us'
+const MIN_LEN = 5
+const DEBOUNCE = 500
 
 /**
  * Conversion from Google `PlaceResult` to more simple object with address fields.
- *
- * @param {PlaceResult} place instance of `PlaceResult` with `address_components` field
- * @return {Object} Return an object with the following fields: `house`, `street`, `city`, `state`, `zip`
  */
-const convertPlaceToAddress = place => {
-  const fieldsMapping = {
-    street_number: {
-      nameForm: 'short_name',
-      resultField: 'house',
-    },
-    route: {
-      nameForm: 'short_name',
-      resultField: 'street',
-    },
-    locality: {
-      nameForm: 'long_name',
-      resultField: 'city',
-    },
-    administrative_area_level_1: {
-      nameForm: 'short_name',
-      resultField: 'state',
-    },
-    postal_code: {
-      nameForm: 'short_name',
-      resultField: 'zip',
-    },
-  }
+const convertPlaceToAddress = (place: PlaceDetailsResult): Address =>
+  place.address_components.reduce(
+    (result: Address, addressComponent: AddressComponent) => {
+      const addressComponentType = addressComponent.types[0]
 
-  const result = {}
+      const fieldSettings = addressFieldsMapping[addressComponentType]
 
-  for (let i = 0; i < place.address_components.length; i++) {
-    const addressComponent = place.address_components[i]
-    const addressComponentType = addressComponent.types[0]
-    const fieldSettings = fieldsMapping[addressComponentType]
+      if (!fieldSettings) return result
 
-    if (fieldSettings) {
       const { nameForm, resultField } = fieldSettings
       result[resultField] = addressComponent[nameForm]
-    }
-  }
 
-  Object.keys(fieldsMapping)
-    .reduce((fields, key) => [...fields, fieldsMapping[key].resultField], [])
-    .forEach(field => {
-      if (!result[field]) result[field] = ''
-    })
-
-  return result
-}
+      return {
+        ...result,
+        [resultField]: addressComponent[nameForm],
+      }
+    },
+    {
+      house: '',
+      street: '',
+      city: '',
+      state: '',
+      zip: '',
+    },
+  )
 
 /**
  * Custom React hook for initialization of Google Places Services.
- *
- * @param {string} key Google Map API key
- * @param {Language} language language for result localization
- * @return React hook reference to an object with initialized place services and constants
  */
-const useInitPlaceServices = (key, language) => {
-  const serviceRef = React.useRef(null)
+const useInitPlaceServices = (key: string, language: Language) => {
+  const serviceRef = React.useRef<{ autocomplete: any; places: any; statusOK: PlaceDetailsResponseStatus } | null>(null)
 
   /**
    * Place Service init function.
@@ -94,7 +84,7 @@ const useInitPlaceServices = (key, language) => {
   React.useEffect(() => {
     if (!key) return
 
-    if (!window.google) {
+    if (!window?.google?.maps?.places) {
       const script = document.createElement('script')
 
       script.type = 'text/javascript'
@@ -112,28 +102,25 @@ const useInitPlaceServices = (key, language) => {
   return serviceRef.current
 }
 
-const LANGUAGE = 'en'
-const COUNTRY = 'us'
-const MIN_LEN = 5
-const DEBOUNCE = 500
-
 const useGoogleAutocompleteSuggestions = ({
   key,
   language = LANGUAGE,
   country = COUNTRY,
   minLength = MIN_LEN,
   debounce = DEBOUNCE,
+}: {
+  key: string
+  language?: Language
+  country?: Country
+  minLength?: number
+  debounce?: number
 }) => {
-  const [suggestions, setSuggestions] = React.useState([])
   const [input, setInput] = React.useState('')
+  const [suggestions, setSuggestions] = React.useState<{ placeId: string; description: string }[]>([])
+
   const placeServices = useInitPlaceServices(key, language)
 
-  /**
-   *
-   * @param {|null} results if
-   * @param {PlacesServiceStatus} status Status of `getPlacePredictions` call
-   */
-  const processResults = (results, status) => {
+  const processResults = (results: PlaceAutocompleteResult[], status: PlaceDetailsResponseStatus) => {
     if (placeServices && placeServices.statusOK === status) {
       setSuggestions(
         results.map(result => ({
@@ -169,11 +156,7 @@ const useGoogleAutocompleteSuggestions = ({
     }
   }, [input])
 
-  /**
-   *
-   * @param {string} placeId correct place id that we have on each suggestion
-   */
-  const getPlace = (placeId, cb) => {
+  const getPlace = (placeId: string, cb: (address: Address) => void) => {
     if (!placeServices) return
 
     placeServices.places.getDetails(
@@ -181,7 +164,7 @@ const useGoogleAutocompleteSuggestions = ({
         placeId,
         fields: ['address_component'],
       },
-      place => {
+      (place: PlaceDetailsResult) => {
         cb(convertPlaceToAddress(place))
       },
     )

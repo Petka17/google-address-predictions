@@ -7,8 +7,7 @@
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "sourceMap": true,
-    "strict": false,
-    "noImplicitAny": true,
-    "allowUnusedLabels": true
+    "strict": true,
+    "noImplicitAny": true
   }
 }

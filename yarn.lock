@@ -765,6 +765,11 @@
     "@parcel/utils" "^1.11.0"
     physical-cpu-count "^2.0.0"
 
+"@types/google__maps@^0.5.11":
+  version "0.5.11"
+  resolved "https://registry.yarnpkg.com/@types/google__maps/-/google__maps-0.5.11.tgz#f565e0c16f853602b9e89e568200014b017df175"
+  integrity sha512-Se9bGlZ5VVVHmx4F1uwdPUo213cwkoLc2CZMLJ9+gYOCp/4NHe7taGJxK5juCVTxU76ISbT3biugmC3IZme4LQ==
+
 "@types/node@^13.1.2":
   version "13.1.2"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-13.1.2.tgz#fe94285bf5e0782e1a9e5a8c482b1c34465fa385"

@@ -12,7 +12,6 @@ type Address = {
 
 type AddressAction = Partial<Address>
 
-//-----
 const App = () => {
   const [{ house, street, city, state, zip }, updateAddress] = React.useReducer(
     (state: Address, newValues: AddressAction) => ({ ...state, ...newValues }),
@@ -26,7 +25,7 @@ const App = () => {
   )
 
   const { input, setInput, suggestions, getPlace } = useGoogleAutocompleteSuggestions({
-    key: process.env.GOOGLE_MAPS_API_KEY,
+    key: process.env.GOOGLE_MAPS_API_KEY || '',
   })
 
   const onInput = (e: React.ChangeEvent<HTMLInputElement>): void => {
