@@ -1,7 +1,8 @@
 import React from 'react'
+
 import { PlaceDetailsResult, PlaceDetailsResponseStatus, PlaceAutocompleteResult, AddressComponent } from '@google/maps'
 
-import { Address, addressFieldsMapping } from './Address'
+import { AddressFieldsMapping } from './Address'
 
 declare global {
   interface Window {
@@ -20,31 +21,21 @@ const DEBOUNCE = 500
 /**
  * Conversion from Google `PlaceResult` to more simple object with address fields.
  */
-const convertPlaceToAddress = (place: PlaceDetailsResult): Address =>
-  place.address_components.reduce(
-    (result: Address, addressComponent: AddressComponent) => {
-      const addressComponentType = addressComponent.types[0]
+const mappingPlaceToAddress = <T>(mapping: AddressFieldsMapping<T>) => (place: PlaceDetailsResult): Partial<T> =>
+  place.address_components.reduce((result: Partial<T>, addressComponent: AddressComponent) => {
+    const addressComponentType = addressComponent.types[0]
 
-      const fieldSettings = addressFieldsMapping[addressComponentType]
+    const fieldSettings = mapping[addressComponentType]
 
-      if (!fieldSettings) return result
+    if (!fieldSettings) return result
 
-      const { nameForm, resultField } = fieldSettings
-      result[resultField] = addressComponent[nameForm]
+    const { nameForm, resultField } = fieldSettings
 
-      return {
-        ...result,
-        [resultField]: addressComponent[nameForm],
-      }
-    },
-    {
-      house: '',
-      street: '',
-      city: '',
-      state: '',
-      zip: '',
-    },
-  )
+    return {
+      ...result,
+      [resultField]: `${addressComponent[nameForm]}`,
+    }
+  }, {})
 
 /**
  * Custom React hook for initialization of Google Places Services.
@@ -59,7 +50,7 @@ const useInitPlaceServices = (key: string, language: Language) => {
     serviceRef.current = {
       /**
        * `AutocompleteService` has `getPlacePredictions` function
-       * that finds predictions and pass them to a callback function
+       * that finds address suggestions and pass them to a callback function
        */
       autocomplete: new window.google.maps.places.AutocompleteService(),
       /**
@@ -102,23 +93,29 @@ const useInitPlaceServices = (key: string, language: Language) => {
   return serviceRef.current
 }
 
-const useGoogleAutocompleteSuggestions = ({
+const useGoogleAutocompleteSuggestions = <T>({
   key,
   language = LANGUAGE,
   country = COUNTRY,
   minLength = MIN_LEN,
   debounce = DEBOUNCE,
+  mapping,
+  cb,
 }: {
   key: string
   language?: Language
   country?: Country
   minLength?: number
   debounce?: number
+  mapping: AddressFieldsMapping<T>
+  cb: (address: Partial<T>) => void
 }) => {
   const [input, setInput] = React.useState('')
   const [suggestions, setSuggestions] = React.useState<{ placeId: string; description: string }[]>([])
 
   const placeServices = useInitPlaceServices(key, language)
+
+  const convertPlaceToAddress = mappingPlaceToAddress(mapping)
 
   const processResults = (results: PlaceAutocompleteResult[], status: PlaceDetailsResponseStatus) => {
     if (placeServices && placeServices.statusOK === status) {
@@ -156,7 +153,7 @@ const useGoogleAutocompleteSuggestions = ({
     }
   }, [input])
 
-  const getPlace = (placeId: string, cb: (address: Address) => void) => {
+  const getPlace = (placeId: string) => {
     if (!placeServices) return
 
     placeServices.places.getDetails(

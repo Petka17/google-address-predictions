@@ -1,6 +1,7 @@
 import React from 'react'
 
 import useGoogleAutocompleteSuggestions from './useGoogleAutocompleteSuggestions'
+import { AddressFieldsMapping } from './Address'
 
 type Address = {
   house: string
@@ -10,11 +11,32 @@ type Address = {
   zip: string
 }
 
-type AddressAction = Partial<Address>
+const addressFieldsMapping: AddressFieldsMapping<Address> = {
+  street_number: {
+    nameForm: 'short_name',
+    resultField: 'house',
+  },
+  route: {
+    nameForm: 'short_name',
+    resultField: 'street',
+  },
+  locality: {
+    nameForm: 'long_name',
+    resultField: 'city',
+  },
+  administrative_area_level_1: {
+    nameForm: 'short_name',
+    resultField: 'state',
+  },
+  postal_code: {
+    nameForm: 'short_name',
+    resultField: 'zip',
+  },
+}
 
 const App = () => {
   const [{ house, street, city, state, zip }, updateAddress] = React.useReducer(
-    (state: Address, newValues: AddressAction) => ({ ...state, ...newValues }),
+    (state: Address, newValues: Partial<Address>) => ({ ...state, ...newValues }),
     {
       house: '',
       street: '',
@@ -26,13 +48,15 @@ const App = () => {
 
   const { input, setInput, suggestions, getPlace } = useGoogleAutocompleteSuggestions({
     key: process.env.GOOGLE_MAPS_API_KEY || '',
+    mapping: addressFieldsMapping,
+    cb: updateAddress,
   })
 
   const onInput = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setInput(e.target.value)
   }
 
-  const handleAddressClick = (placeId: string) => () => getPlace(placeId, updateAddress)
+  const handleAddressClick = (placeId: string) => () => getPlace(placeId)
 
   return (
     <React.Fragment>
