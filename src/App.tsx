@@ -34,7 +34,7 @@ const addressFieldsMapping: AddressFieldsMapping<Address> = {
   },
 }
 
-const App = () => {
+const App = (): JSX.Element => {
   const [{ house, street, city, state, zip }, updateAddress] = React.useReducer(
     (state: Address, newValues: Partial<Address>) => ({ ...state, ...newValues }),
     {

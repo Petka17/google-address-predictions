@@ -12,6 +12,7 @@ import { AddressFieldsMapping } from './Address'
 
 declare global {
   interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     google?: any
   }
 }
@@ -68,16 +69,19 @@ const mappingPlaceToAddress = <T>(mapping: AddressFieldsMapping<T>) => (place: P
     }
   }, {})
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type GMapServices = { autocomplete: any; places: any; statusOK: PlaceDetailsResponseStatus }
+
 /**
  * Custom React hook for initialization of Google Places Services.
  */
-const useInitPlaceServices = (key: string, language: Language) => {
-  const serviceRef = React.useRef<{ autocomplete: any; places: any; statusOK: PlaceDetailsResponseStatus } | null>(null)
+const useInitPlaceServices = (key: string, language: Language): GMapServices | null => {
+  const serviceRef = React.useRef<GMapServices | null>(null)
 
   /**
    * Place Service init function.
    */
-  const initService = () => {
+  const initService = (): void => {
     serviceRef.current = {
       /**
        * `AutocompleteService` has `getPlacePredictions` function
@@ -140,7 +144,16 @@ const useGoogleAutocompleteSuggestions = <T>({
   debounce?: number
   mapping: AddressFieldsMapping<T>
   cb: (address: Partial<T>) => void
-}) => {
+}): {
+  input: string
+  setInput: (input: string) => void
+  suggestions: {
+    placeId: string
+    description: string
+  }[]
+  getPlace: (placeId: string) => void
+} => {
+  console.log('key', key)
   const [input, setInput] = React.useState('')
   const [suggestions, setSuggestions] = React.useState<{ placeId: string; description: string }[]>([])
 
@@ -148,7 +161,7 @@ const useGoogleAutocompleteSuggestions = <T>({
 
   const convertPlaceToAddress = mappingPlaceToAddress(mapping)
 
-  const processResults = (results: PlaceAutocompleteResult[], status: PlaceDetailsResponseStatus) => {
+  const processResults = (results: PlaceAutocompleteResult[], status: PlaceDetailsResponseStatus): void => {
     if (placeServices && placeServices.statusOK === status) {
       setSuggestions(
         results.map(result => ({
@@ -184,7 +197,7 @@ const useGoogleAutocompleteSuggestions = <T>({
     }
   }, [input])
 
-  const getPlace = (placeId: string) => {
+  const getPlace = (placeId: string): void => {
     if (!placeServices) return
 
     placeServices.places.getDetails(
