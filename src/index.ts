@@ -5,15 +5,24 @@ import {
   PlaceDetailsResponseStatus,
   PlaceAutocompleteResult,
   AddressComponent,
+  AddressType,
+  GeocodingAddressComponentType,
   Language,
 } from '@google/maps'
-
-import { AddressFieldsMapping } from './Address'
 
 declare global {
   interface Window {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     google?: any
+  }
+}
+
+type ComponentForm = 'short_name' | 'long_name'
+
+export type AddressFieldsMapping<T> = {
+  [key in AddressType | GeocodingAddressComponentType]?: {
+    nameForm: ComponentForm
+    resultField: keyof T
   }
 }
 

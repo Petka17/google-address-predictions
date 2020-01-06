@@ -16,3 +16,4 @@ $ GOOGLE_MAPS_API_KEY=YOUR_API_KEY yarn start
 5. Add licensing
 6. Add instructions how to get an API key
 7. Add tests
+8. Add description on how it works and the Map API.
