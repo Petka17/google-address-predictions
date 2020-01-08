@@ -9,11 +9,8 @@ $ GOOGLE_MAPS_API_KEY=YOUR_API_KEY yarn start
 
 ## TODO
 
-1. Add eslint
-2. Optimize the API for the hook
-3. Publish hook as a library
-4. Move UI part to example folder
-5. Add licensing
-6. Add instructions how to get an API key
-7. Add tests
-8. Add description on how it works and the Map API.
+1. Optimize the API for the hook
+2. Add instructions how to get an API key
+3. Add tests
+4. Add description on how it works and the Map API.
+5. Add semantic-release

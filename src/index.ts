@@ -19,10 +19,17 @@ declare global {
 
 type ComponentForm = 'short_name' | 'long_name'
 
-export type AddressFieldsMapping<T> = {
+type ComponentToAddressMapping<T> = {
   [key in AddressType | GeocodingAddressComponentType]?: {
-    nameForm: ComponentForm
     resultField: keyof T
+    nameForm: ComponentForm
+  }
+}
+
+export type AddressToComponentMapping<T> = {
+  [key in keyof T]: {
+    componentType: AddressType | GeocodingAddressComponentType
+    nameForm: ComponentForm
   }
 }
 
@@ -55,31 +62,45 @@ type Country =
   | 'gg' | 'im' | 'je' | 'me' | 'bl' | 'mf' | 'rs' | 'sx' | 'ss' | 'xk'
 
 const LANGUAGE: Language = 'en'
-const COUNTRY: Country = 'us'
-const MIN_LEN = 5
+const MIN_LEN = 3
 const DEBOUNCE = 500
 
 /**
  * Conversion from Google `PlaceResult` to more simple object with address fields.
  */
-const mappingPlaceToAddress = <T>(mapping: AddressFieldsMapping<T>) => (place: PlaceDetailsResult): Partial<T> =>
-  place.address_components.reduce((result: Partial<T>, addressComponent: AddressComponent) => {
-    const addressComponentType = addressComponent.types[0]
+const mappingPlaceToAddress = <T>(mapping: AddressToComponentMapping<T>) => {
+  const componentFieldMapping: ComponentToAddressMapping<T> = {}
 
-    const fieldSettings = mapping[addressComponentType]
-
-    if (!fieldSettings) return result
-
-    const { nameForm, resultField } = fieldSettings
-
-    return {
-      ...result,
-      [resultField]: `${addressComponent[nameForm]}`,
+  for (const field in mapping) {
+    componentFieldMapping[mapping[field].componentType] = {
+      nameForm: mapping[field].nameForm,
+      resultField: field,
     }
-  }, {})
+  }
+
+  return (place: PlaceDetailsResult): Partial<T> => {
+    console.debug(place)
+    return place.address_components.reduce((result: Partial<T>, addressComponent: AddressComponent) => {
+      const fieldSettings = componentFieldMapping[addressComponent.types[0]]
+
+      if (!fieldSettings) return result
+
+      const { resultField, nameForm } = fieldSettings
+
+      return {
+        ...result,
+        [resultField]: `${addressComponent[nameForm]}`,
+      }
+    }, {})
+  }
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type GMapServices = { autocomplete: any; places: any; statusOK: PlaceDetailsResponseStatus }
+type GMapServices = {
+  autocomplete: any
+  places: any
+  statusOK: PlaceDetailsResponseStatus
+}
 
 /**
  * Custom React hook for initialization of Google Places Services.
@@ -140,7 +161,7 @@ const useInitPlaceServices = (key: string, language: Language): GMapServices | n
 const useGoogleAutocompleteSuggestions = <T>({
   key,
   language = LANGUAGE,
-  country = COUNTRY,
+  country,
   minLength = MIN_LEN,
   debounce = DEBOUNCE,
   mapping,
@@ -151,7 +172,7 @@ const useGoogleAutocompleteSuggestions = <T>({
   country?: Country
   minLength?: number
   debounce?: number
-  mapping: AddressFieldsMapping<T>
+  mapping: AddressToComponentMapping<T>
   cb: (address: Partial<T>) => void
 }): {
   input: string
@@ -162,7 +183,6 @@ const useGoogleAutocompleteSuggestions = <T>({
   }[]
   getPlace: (placeId: string) => void
 } => {
-  console.log('key', key)
   const [input, setInput] = React.useState('')
   const [suggestions, setSuggestions] = React.useState<{ placeId: string; description: string }[]>([])
 
@@ -172,6 +192,7 @@ const useGoogleAutocompleteSuggestions = <T>({
 
   const processResults = (results: PlaceAutocompleteResult[], status: PlaceDetailsResponseStatus): void => {
     if (placeServices && placeServices.statusOK === status) {
+      console.debug(results)
       setSuggestions(
         results.map(result => ({
           placeId: result.place_id,
@@ -192,7 +213,7 @@ const useGoogleAutocompleteSuggestions = <T>({
       if (placeServices && input.length > minLength) {
         placeServices.autocomplete.getPlacePredictions(
           {
-            componentRestrictions: { country },
+            componentRestrictions: country ? { country } : {},
             types: ['address'],
             input,
           },

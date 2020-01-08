@@ -1,6 +1,6 @@
 {
-  "name": "use-google-address-suggession",
-  "version": "0.0.1",
+  "name": "use-google-address-suggestions",
+  "version": "0.0.3",
   "license": "MIT",
   "private": false,
   "main": "lib/index.js",
